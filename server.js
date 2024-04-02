@@ -1,8 +1,9 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { sessionRoutes } from './routes/sessionRoutes.js'
 import mongoose from 'mongoose'
+import { sessionRoutes } from './routes/sessionRoutes.js'
+import { userRoutes } from './routes/userRoutes.js'
 
 const PORT = 8000
 
@@ -12,6 +13,7 @@ app.use(express.json())
 dotenv.config()
 
 app.use('/api/sessions', sessionRoutes)
+app.use('/api/users', userRoutes)
 
 mongoose.connect("mongodb://localhost:27017", { dbName: 'gemini_chatbot'})
     .then(() => {
