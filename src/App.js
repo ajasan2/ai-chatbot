@@ -23,7 +23,7 @@ function App() {
         }
         try {
             const options = {
-                method: "POST",
+                method: "PUT",
                 body: JSON.stringify({
                     history: history,
                     message: value
@@ -32,7 +32,7 @@ function App() {
                     "Content-Type": "application/json"
                 }
             }
-            const response = await fetch("http://localhost:8000/gemini", options)
+            const response = await fetch("http://localhost:8000/", options)
             const data = await response.text()
             console.log(data)
             setHistory(oldHistory => [...oldHistory, {
