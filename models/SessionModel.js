@@ -16,10 +16,10 @@ const ChatHistorySchema = new mongoose.Schema({
 
 
 const SessionSchema = new mongoose.Schema({
-    sessionId: {
-        type: String,
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-        unique: true,
+        ref: 'User',
     },
     chatHistory: [ChatHistorySchema]
 }, { timestamps: true })

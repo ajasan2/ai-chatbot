@@ -1,21 +1,22 @@
 import express from 'express'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getSession, addSession, updateSession, deleteSession } from '../controllers/sessionController.js'
+import { addSession, getSession, getUserSessions, updateSession, deleteSession } from '../controllers/sessionController.js'
+import auth from '../middlewares/auth.js'
 
 const router = express.Router()
 
-const genAI = new GoogleGenerativeAI(process.env.API_KEY)
-
 // Create a new session
-router.post('/', addSession)
+router.post('/', auth, addSession)
+
+// Read all user sessions
+router.get('/user', auth, getUserSessions)
 
 // Read a session
-router.get('/:sessionId', getSession)
+router.get('/:sessionId', auth, getSession)
 
 // Update a session
-router.put('/:sessionId', updateSession)
+router.put('/:sessionId', auth, updateSession)
 
 // Delete a session
-router.delete('/:sessionId', deleteSession)
+router.delete('/:sessionId', auth, deleteSession)
 
 export { router as sessionRoutes }

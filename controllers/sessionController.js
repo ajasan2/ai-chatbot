@@ -1,29 +1,47 @@
+import mongoose from 'mongoose'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import Session from '../models/SessionModel.js'
+import User from '../models/UserModel.js'
 
+const genAI = new GoogleGenerativeAI(process.env.API_KEY)
 
 const addSession = async (req, res) => {
     try {
-        const newSession = await Session.create({ chatHistory: [] })
-        res.status(200).json(newSession)
+        const user = await User.findById(req.user._id)
+        const newSession = await Session.create({ userId: user._id, chatHistory: [] })
+        res.status(200).json({ newSession })
     } catch (error) {
         return res.status(500).json({ error: error.message })
     }
 }
 
-
 const getSession = async (req, res) => {
-    if (!mongoose.Type.ObjectId.isValid(req.params.sessionId)) {
-        return res.status(404).json({ error: 'Invalid session ID' })  
+    if (!mongoose.Types.ObjectId.isValid(req.params.sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' })
+    }
+
+    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
+    if (!session) {
+        return res.status(404).json({ error: 'Session not found' })
     }
 
     try {
-        const session = await Session.findById(req.params.sessionId)
-        res.status(200).json(session)
+        res.status(200).json({ session })
     } catch (error) {
         return res.status(500).json({ error: error.message })
     }
 }
 
+const getUserSessions = async (req, res) => {
+    const user = await User.findById(req.user._id)
+
+    try {
+        const userSessions = await Session.find({ userId: user._id})
+        res.status(200).json({ userSessions })
+    } catch (error) {
+        return res.status(500).json({ error: error.message })
+    }
+}
 
 // Modify function depending on state maintained in App.js
 const updateSession = async (req, res) => {
@@ -32,11 +50,11 @@ const updateSession = async (req, res) => {
     if (!sessionId || !chatHistory) {
         return res.status(400).json({ error: 'Invalid request' })
     }
-    else if (!mongoose.Type.ObjectId.isValid(req.params.sessionId)) {
-        return res.status(404).json({ error: 'Invalid session ID' })  
+    else if (!mongoose.Types.ObjectId.isValid(req.params.sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' })
     }
 
-    const session = await Session.findById(req.params.sessionId)
+    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
     if (!session) {
         return res.status(404).json({ error: 'Session not found' })
     }
@@ -59,23 +77,22 @@ const updateSession = async (req, res) => {
         })
 
         await session.save()
-        res.status(200).send(text)
+        res.status(200).json({ text })
     } catch (error) {
-        return res.status(500).send(error.message)
+        res.status(500).json({ error: error.message })
     }
 }
 
-
 const deleteSession = async (req, res) => {
-    if (!mongoose.Type.ObjectId.isValid(req.params.sessionId)) {
-        return res.status(400).json({ error: 'Invalid session ID' })  
+    if (!mongoose.Types.ObjectId.isValid(req.params.sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' })
     }
 
-    const session = await Session.findById(req.params.sessionId)
+    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
     if (!session) {
         return res.status(404).json({ error: 'Session not found' })
     }
- 
+
     try {
         await session.deleteOne()
         res.status(200).json({ message: 'Session was deleted' })
@@ -85,4 +102,4 @@ const deleteSession = async (req, res) => {
 }
 
 
-export { addSession, getSession, updateSession, deleteSession }
+export { addSession, getSession, getUserSessions, updateSession, deleteSession }
