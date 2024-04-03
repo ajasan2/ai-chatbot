@@ -36,8 +36,8 @@ const getUserSessions = async (req, res) => {
     const user = await User.findById(req.user._id)
 
     try {
-        const userSessions = await Session.find({ userId: user._id})
-        res.status(200).json({ userSessions })
+        const userSessions = await Session.find({ userId: user._id}).sort({ createdAt: "desc"})
+        res.status(200).json({ email: user.email, userSessions })
     } catch (error) {
         return res.status(500).json({ error: error.message })
     }
