@@ -1,17 +1,30 @@
 import mongoose from 'mongoose'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+
 import Session from '../models/SessionModel.js'
 import User from '../models/UserModel.js'
 
-const genAI = new GoogleGenerativeAI(process.env.API_KEY)
-
-const addSession = async (req, res) => {
+const createSession = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id)
-        const newSession = await Session.create({ userId: user._id, chatHistory: [] })
+        const genAI = new GoogleGenerativeAI(process.env.API_KEY)
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+        const prompt = req.body.message
+        const result = await model.generateContent(prompt)
+        const response = await result.response
+        const text = response.text()
+
+        const chatHistory = [{
+            role: 'user',
+            parts: [{ text: prompt }]
+        }, {
+            role: 'model',
+            parts: [{ text }]
+        }]
+
+        const newSession = await Session.create({ userId: req.user._id, chatHistory });
         res.status(200).json({ newSession })
     } catch (error) {
-        return res.status(500).json({ error: error.message })
+        res.status(500).json({ error: error.message })
     }
 }
 
@@ -20,24 +33,18 @@ const getSession = async (req, res) => {
         return res.status(400).json({ error: 'Invalid session ID' })
     }
 
-    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
-    if (!session) {
-        return res.status(404).json({ error: 'Session not found' })
-    }
-
     try {
+        const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
         res.status(200).json({ session })
     } catch (error) {
         return res.status(500).json({ error: error.message })
     }
 }
 
-const getUserSessions = async (req, res) => {
-    const user = await User.findById(req.user._id)
-
+const getSessions = async (req, res) => {
     try {
-        const userSessions = await Session.find({ userId: user._id}).sort({ createdAt: "desc"})
-        res.status(200).json({ email: user.email, userSessions })
+        const userSessions = await Session.find({ userId: req.user._id }).sort({ createdAt: "desc" })
+        res.status(200).json({ userSessions })
     } catch (error) {
         return res.status(500).json({ error: error.message })
     }
@@ -45,24 +52,35 @@ const getUserSessions = async (req, res) => {
 
 // Modify function depending on state maintained in App.js
 const updateSession = async (req, res) => {
-    const { sessionId, chatHistory } = req.body
+    const sessionId = req.params.sessionId;
 
-    if (!sessionId || !chatHistory) {
+    if (!sessionId) {
         return res.status(400).json({ error: 'Invalid request' })
     }
-    else if (!mongoose.Types.ObjectId.isValid(req.params.sessionId)) {
+    else if (!mongoose.Types.ObjectId.isValid(sessionId)) {
         return res.status(400).json({ error: 'Invalid session ID' })
     }
 
-    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
+    const session = await Session.findOne({ _id: sessionId, userId: req.user._id })
     if (!session) {
         return res.status(404).json({ error: 'Session not found' })
     }
 
     try {
+        // Convert chat history to the format required by the API
+        let formattedChatHistory = session.chatHistory.map(chat => {
+            return {
+                role: chat.role,
+                parts: chat.parts.map(part => {
+                    return { text: part.text }
+                })
+            }
+        });
+
+        const genAI = new GoogleGenerativeAI(process.env.API_KEY)
         const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
         const chat = model.startChat({
-            history: req.body.history
+            history: formattedChatHistory
         })
         const result = await chat.sendMessage(req.body.message)
         const response = await result.response
@@ -70,7 +88,7 @@ const updateSession = async (req, res) => {
 
         session.chatHistory.push({
             role: 'user',
-            parts: [{ text: message }]
+            parts: [{ text: req.body.message }]
         }, {
             role: 'model',
             parts: [{ text }]
@@ -88,12 +106,8 @@ const deleteSession = async (req, res) => {
         return res.status(400).json({ error: 'Invalid session ID' })
     }
 
-    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
-    if (!session) {
-        return res.status(404).json({ error: 'Session not found' })
-    }
-
     try {
+        const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user._id })
         await session.deleteOne()
         res.status(200).json({ message: 'Session was deleted' })
     } catch (error) {
@@ -102,4 +116,4 @@ const deleteSession = async (req, res) => {
 }
 
 
-export { addSession, getSession, getUserSessions, updateSession, deleteSession }
+export { createSession, getSession, getSessions, updateSession, deleteSession }

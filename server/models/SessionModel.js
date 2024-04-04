@@ -12,7 +12,7 @@ const ChatHistorySchema = new mongoose.Schema({
             required: true,
         }
     }]
-}, { timestamps: true })
+})
 
 
 const SessionSchema = new mongoose.Schema({

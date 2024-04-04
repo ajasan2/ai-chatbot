@@ -1,14 +1,14 @@
 import express from 'express'
-import { addSession, getSession, getUserSessions, updateSession, deleteSession } from '../controllers/sessionController.js'
+import { createSession, getSession, getSessions, updateSession, deleteSession } from '../controllers/sessionController.js'
 import auth from '../middlewares/auth.js'
 
 const router = express.Router()
 
 // Create a new session
-router.post('/', auth, addSession)
+router.post('/', auth, createSession)
 
 // Read all user sessions
-router.get('/user', auth, getUserSessions)
+router.get('/user', auth, getSessions)
 
 // Read a session
 router.get('/:sessionId', auth, getSession)

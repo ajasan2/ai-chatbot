@@ -28,7 +28,7 @@ const Register = () => {
                 formData.passwordConfirm
             );
             setUser({ email: formData.email, session: [] });
-            navigate('/dashboard');
+            navigate('/');
         } catch (error) {
             setError(error.message);
         }
