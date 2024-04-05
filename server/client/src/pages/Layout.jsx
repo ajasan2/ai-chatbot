@@ -19,8 +19,9 @@ const Layout = () => {
     return (
         <>
             <header className="bg-base text-neutral">
-                <nav className="flex items-center justify-between p-4">
+                <nav className="flex items-center justify-between p-4 max-w-screen-lg mx-auto">
                     <Link title="Home" to="/" className="fa-solid fa-house-chimney nav-link"></Link>
+                    <span className="site-title">Gemini AI Chatbot</span>
                     {user.email ? (
                         <div className="flex items-center gap-2">
                             <Link title="Start a new session" to="/create" className="fa-solid fa-plus nav-link"></Link>
@@ -31,7 +32,7 @@ const Layout = () => {
                             <Link title="Login" to="/login" className="fa-solid fa-right-to-bracket nav-link"></Link>
                             <Link title="Register" to="/register" className="fa-solid fa-user-plus nav-link"></Link>
                         </div>
-                        
+
                     )}
                 </nav>
             </header>
