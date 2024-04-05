@@ -1,13 +1,15 @@
 import mongoose from 'mongoose'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
 
 import Session from '../models/SessionModel.js'
-import User from '../models/UserModel.js'
 
 const createSession = async (req, res) => {
     try {
-        const genAI = new GoogleGenerativeAI(process.env.API_KEY)
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+        const model = configureGenerativeModel(
+            process.env.API_KEY, 
+            'gemini-pro', 
+            HarmBlockThreshold.BLOCK_ONLY_HIGH);
+
         const prompt = req.body.message
         const result = await model.generateContent(prompt)
         const response = await result.response
@@ -77,8 +79,11 @@ const updateSession = async (req, res) => {
             }
         });
 
-        const genAI = new GoogleGenerativeAI(process.env.API_KEY)
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+        const model = configureGenerativeModel(
+            process.env.API_KEY, 
+            'gemini-pro', 
+            HarmBlockThreshold.BLOCK_ONLY_HIGH);
+            
         const chat = model.startChat({
             history: formattedChatHistory
         })
@@ -114,6 +119,33 @@ const deleteSession = async (req, res) => {
         return res.status(500).json({ error: error.message })
     }
 }
+
+const configureGenerativeModel = (apiKey, modelName, safetyThreshold) => {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const safetySettings = [
+        {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: safetyThreshold
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: safetyThreshold
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: safetyThreshold
+        },
+        {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: safetyThreshold
+        },
+    ];
+
+    return genAI.getGenerativeModel({
+        model: modelName,
+        safetySettings: safetySettings
+    });
+};
 
 
 export { createSession, getSession, getSessions, updateSession, deleteSession }

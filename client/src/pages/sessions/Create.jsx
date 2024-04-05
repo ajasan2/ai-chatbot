@@ -6,6 +6,8 @@ import { createSession } from "../../controllers/sessionsController";
 
 const Create = () => {
     const navigate = useNavigate();
+
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [value, setValue] = useState("");
 
@@ -25,34 +27,41 @@ const Create = () => {
         setError("");
     };
 
-    const getResponse = async (e) => {
+    const handleCreate = async (e) => {
         e.preventDefault();
-
+        setLoading(true);
         try {
             const { newSession } = await createSession(value);
             navigate("/update", { state: { session: newSession } });
         } catch (error) {
             setError(error.message);
         }
+        setLoading(false);
     };
 
     return (
         <section className="card">
-            <p>What would you like to know?
-                <button className="btn" onClick={surprise}>Surprise me!</button>
-            </p>
-            <div className="input-container">
-                <input
-                    type="text"
-                    value={value}
-                    className="input"
-                    placeholder={"Is Santa Clause real?"}
-                    onChange={(e) => setValue(e.target.value)}
-                    autoFocus
-                ></input>
-                {!error && <button className="btn" onClick={getResponse}>Send</button>}
-                {error && <button className="btn" onClick={clear}>Clear</button>}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <p className="my-4">What would you like to know?</p>
+                    {loading && (<i className="fa-solid fa-spinner fa-spin text-3xl ml-2"></i>)}
+                </div>
+                <button
+                    className="block bg-primary text-black rounded-md py-1 px-3 hover:scale-y-95"
+                    onClick={surprise}>
+                    Surprise me!
+                </button>
             </div>
+            <input
+                type="text"
+                value={value}
+                className="input"
+                placeholder={"Is Santa Clause real?"}
+                onChange={(e) => setValue(e.target.value)}
+                autoFocus
+            ></input>
+            <button className="btn mb-4" onClick={handleCreate}>Send</button>
+            <button className="btn" onClick={clear}>Clear</button>
             {error && <Alert msg={error} />}
         </section>
     );

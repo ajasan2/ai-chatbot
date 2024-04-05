@@ -26,6 +26,7 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [deleteCount, setDeleteCount] = useState(0);
 
     const handleDelete = async (e, _id) => {
         e.stopPropagation();
@@ -34,6 +35,7 @@ const Home = () => {
             try {
                 const data = await deleteSession(_id);
                 setSuccess(data.message);
+                setDeleteCount(deleteCount + 1);
             } catch (error) {
                 setError(error.message);
             }
@@ -48,31 +50,29 @@ const Home = () => {
             <p>{user.email}</p>
             <h1 className="title">Sessions</h1>
 
-            {loading && (<i className="fa-solid fa-spinner animate-spin text-3xl text-center block"></i>)}
-            {success && <Success msg={success} />}
             {error && <Alert msg={error} />}
-
+            {success && <Success key={deleteCount} msg={success} />}
+            
             {user.sessions && user.sessions.map(session => (
                 <div
                     key={session._id}
-                    className="p-2 bg-white hover:bg-gray-200 transition-colors duration-200 rounded cursor-pointer"
+                    className="hover:bg-primary bg-neutral mb-4 p-2 rounded cursor-pointer session-card flex items-center"
                 >
                     <Link
                         to={"/update"}
                         state={{ session }}
+                        className="flex-1"
                     >
-                        <Session session={session}>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    className="fa-solid fa-trash-can nav-link text-red-500 hover:bg-red-200"
-                                    title="Delete"
-                                    onClick={(e) => handleDelete(e, session._id)}
-                                ></button>
-                            </div>
-                        </Session>
+                        <Session session={session} />
                     </Link>
+                    <button
+                        className="ml-2 fa-solid fa-trash-can nav-link text-red-500 hover:bg-red-200"
+                        title="Delete"
+                        onClick={(e) => handleDelete(e, session._id)}
+                    ></button>
                 </div>
             ))}
+            {loading && (<i className="text-6xl fa-solid fa-spinner fa-spin text-3xl text-center block mt-8"></i>)}
         </section>
     );
 };

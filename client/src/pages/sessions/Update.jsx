@@ -7,6 +7,7 @@ import { updateSession } from "../../controllers/sessionsController"
 const Update = () => {
     const { state } = useLocation();
 
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null)
     const [value, setValue] = useState("")
     const [history, setHistory] = useState(state?.session?.chatHistory ?? [])
@@ -22,10 +23,11 @@ const Update = () => {
         setValue(randomValue)
     }
 
-    const getResponse = async (e) => {
+    const handleUpdate = async (e) => {
         e.preventDefault();
 
         try {
+            setLoading(true);
             const data = await updateSession(state.session._id, value);
             setHistory(oldHistory => [...oldHistory, {
                 role: "user",
@@ -36,10 +38,11 @@ const Update = () => {
                 parts: [{ text: data.text }]
             }
             ])
-            setValue("");
         } catch (error) {
             setError(error.message);
         }
+        setLoading(false);
+        setValue("");
     }
 
     const clear = () => {
@@ -49,31 +52,36 @@ const Update = () => {
 
     return (
         <section className="card">
-            <p>What would you like to know?
-                <button className="btn" onClick={surprise} disabled={history}>Surprise me!</button>
-            </p>
-            <div className="input-container">
-                <input
-                    type="text"
-                    value={value}
-                    className="input"
-                    placeholder={"Is Santa Clause real?"}
-                    onChange={(e) => setValue(e.target.value)}
-                    autoFocus
-                ></input>
-                {!error && <button className="btn" onClick={getResponse}>Send</button>}
-                {error && <button className="btn" onClick={clear}>Clear</button>}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <p className="my-4">What would you like to know?</p>
+                    {loading && (<i className="fa-solid fa-spinner fa-spin text-3xl ml-2"></i>)}
+                </div>
+                <button
+                    className="block bg-primary text-black rounded-md py-1 px-3 hover:scale-y-95"
+                    onClick={surprise}>
+                    Surprise me!
+                </button>
             </div>
+            <input
+                type="text"
+                value={value}
+                className="input"
+                placeholder={"Is Santa Clause real?"}
+                onChange={(e) => setValue(e.target.value)}
+                autoFocus
+            ></input>
 
+            <button className="btn" onClick={handleUpdate}>Send</button>
+            <button className="btn" onClick={clear}>Clear</button>
             {error && <Alert msg={error} />}
 
-            <div className="search-result">
-                {history.map((chatItem, index) => (
-                    <div key={index}>
-                        <p>{chatItem.role} : {chatItem.parts.map(part => part.text).join(', ')}</p>
-                    </div>
-                ))}
-            </div>
+            {history.map((chatItem, index) => (
+                <div key={index} className={`chat-item ${chatItem.role}`}>
+                    <p>{chatItem.role} : {chatItem.parts.map(part => part.text).join(', ')}</p>
+                </div>
+            ))}
+
         </section>
     );
 }

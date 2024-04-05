@@ -18,7 +18,7 @@ const Layout = () => {
 
     return (
         <>
-            <header className="bg-indigo-500 text-white">
+            <header className="bg-base text-neutral">
                 <nav className="flex items-center justify-between p-4">
                     <Link title="Home" to="/" className="fa-solid fa-house-chimney nav-link"></Link>
                     {user.email ? (

@@ -15,7 +15,7 @@ dotenv.config()
 app.use('/api/sessions', sessionRoutes)
 app.use('/api/users', userRoutes)
 
-mongoose.connect("mongodb://localhost:27017", { dbName: 'gemini_chatbot'})
+mongoose.connect(process.env.DB_URI, { dbName: 'gemini_chatbot'})
     .then(() => {
         console.log("Connected to MongoDB")
         app.listen(PORT, () => console.log(`Listening on port ${PORT}`))

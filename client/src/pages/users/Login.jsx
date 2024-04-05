@@ -29,7 +29,7 @@ const Login = () => {
 
     return (
         <section className="card">
-            <h1 className="title">Log in to your account</h1>
+            <h1 className="title">Login</h1>
             <form onSubmit={handleLogin}>
                 <input
                     type="email"
